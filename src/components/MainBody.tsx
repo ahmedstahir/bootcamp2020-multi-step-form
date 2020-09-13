@@ -3,7 +3,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import { Card, CardContent, Button, CircularProgress, Grid } from '@material-ui/core';
 import { Formik, Form, Field, FormikConfig, FormikValues } from 'formik';
 import { TextField, CheckboxWithLabel } from 'formik-material-ui';
-import { object, string } from 'yup';
+import { object, string, number } from 'yup';
 import { ThemeProvider } from '@material-ui/styles';
 import { createMuiTheme } from '@material-ui/core/styles';
 import Stepper from '@material-ui/core/Stepper';
@@ -41,7 +41,7 @@ const theme = createMuiTheme({
         },
         secondary: {
             light: '#7c7c7c',
-            main: '#00dc49',
+            main: '#0000ff',
             //color:'#ffffff'
             // dark: will be calculated from palette.secondary.main,
             contrastText: '#fff',
@@ -76,6 +76,21 @@ export default function MainBody() {
             .matches(/(^$)|(^[0-9]{4}$)/, "Valid Post Code has 4 digits")
     });
 
+    const loanDetailsValidationSchema = object({
+        loanRequested: number()
+            .min(1_000_000, "Minimum loan amount is 1,000,000")
+            .required("This is a required field"),
+        currentSalary: number()
+            .positive("A positive value is expected")
+            .required("This is a required field")
+            .when(
+                "loanRequested",
+                (loanRequested: number, schema: any) => {
+                    return schema.moreThan(loanRequested / 10, "Must be more than 10% of requested loan")
+                }
+            )
+    });
+
     return (
         <ThemeProvider theme={theme}>
             <Card className={classes.cardRoot}>
@@ -87,12 +102,14 @@ export default function MainBody() {
                             emailAddress: '',
                             mobileNumber: '',
                             postCode: '',
-                            description: '',
-                            address: ''
+                            address: '',
+                            loanRequested: 0,
+                            currentSalary: 0,
+                            company: '',
+                            position: ''
                         }}
-                        onSubmit={async (values) => {
+                        onSubmit={async () => {
                             await sleep(3000);
-                            console.log(values);
                         }}
                     >
                         <FormikStep label="Terms & Conditions">
@@ -133,8 +150,21 @@ export default function MainBody() {
                                 </Grid>
                             </Grid>
                         </FormikStep>
-                        <FormikStep label="Third">
-                            <Field fullWidth name="description" component={TextField} label="Description" />
+                        <FormikStep label="Loan Details" validationSchema={loanDetailsValidationSchema}>
+                            <Grid container spacing={3} style={{ width: '100vh' }}>
+                                <Grid item xs={12} sm={6}>
+                                    <Field fullWidth type="number" name="loanRequested" component={TextField} label="Loan Requested" />
+                                </Grid>
+                                <Grid item xs={12} sm={6}>
+                                    <Field fullWidth type="number" name="currentSalary" component={TextField} label="Current Salary" />
+                                </Grid>
+                                <Grid item xs={12} sm={6}>
+                                    <Field fullWidth name="company" component={TextField} label="Company" />
+                                </Grid>
+                                <Grid item xs={12} sm={6}>
+                                    <Field fullWidth name="position" component={TextField} label="PositionCode" />
+                                </Grid>
+                            </Grid>
                         </FormikStep>
                     </FormikStepper>
                 </CardContent>
