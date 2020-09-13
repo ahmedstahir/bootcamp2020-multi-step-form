@@ -11,6 +11,11 @@ import Step from '@material-ui/core/Step';
 import StepLabel from '@material-ui/core/StepLabel';
 import ForwardArrow from '@material-ui/icons/ArrowForward';
 import BackArrow from '@material-ui/icons/ArrowBack';
+import Dialog from '@material-ui/core/Dialog';
+import DialogActions from '@material-ui/core/DialogActions';
+import DialogContent from '@material-ui/core/DialogContent';
+import DialogContentText from '@material-ui/core/DialogContentText';
+import DialogTitle from '@material-ui/core/DialogTitle';
 
 const useStyles = makeStyles((theme) => ({
     cardRoot: {
@@ -122,12 +127,12 @@ export default function MainBody() {
                                         label="Terms and Conditions"
                                         multiline rows={10}
                                         disabled={true}
+                                        InputProps={{ style: { fontFamily: 'roboto', fontSize: 14, fontWeight: 'bold' } }}
                                         value={"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla vitae sapien ante. Proin tellus metus, convallis a lectus quis, sodales pharetra magna. Morbi non ornare purus, nec auctor orci. Sed ac semper ipsum. Nulla luctus vel quam a accumsan. Fusce rhoncus et nisl et commodo. Aenean aliquam urna bibendum, pretium leo in, sodales ex. Ut aliquam faucibus dui, eu tincidunt tellus mollis in. Sed consectetur risus id rutrum tempus. In sed nisi viverra, malesuada orci a, imperdiet ipsum. Pellentesque augue justo, elementum non imperdiet at, gravida a nibh. Sed urna sapien, tristique eget rutrum sed, ultrices non orci. Maecenas varius dui ex, sit amet rutrum tellus laoreet porttitor. Morbi interdum sapien ut nibh auctor auctor. Curabitur rutrum ac lacus sit amet maximus. Quisque ac nulla quis lorem pretium egestas eget non lacus.\n\nDuis laoreet tellus elit. Curabitur in pellentesque magna. Phasellus auctor, risus non scelerisque lacinia, libero nulla vulputate felis, non varius nunc urna id tellus. Etiam sapien justo, ullamcorper nec mi eget, aliquet rutrum dui. Maecenas erat augue, tempus vitae est nec, faucibus imperdiet mauris. Ut et pellentesque tortor. Vivamus at diam et turpis porta fermentum. Etiam eget sem sed tortor lacinia sollicitudin vitae sit amet justo. Aenean ornare, nisi id viverra sagittis, diam velit faucibus ante, at suscipit velit nisl in metus. Vestibulum id iaculis arcu. Mauris in sodales eros. Pellentesque ornare sollicitudin tellus, commodo egestas mauris fringilla nec. Nunc purus tellus, dictum vel nunc sit amet, posuere accumsan magna. Fusce eu facilisis justo.\n\nIn eget nunc et elit porta cursus quis ut nunc. Praesent congue in augue molestie aliquet. Integer varius tincidunt blandit. Donec nec risus ac magna posuere finibus. Nunc eu ipsum neque. Aliquam quis congue lorem, et iaculis orci. Donec tellus lacus, accumsan sit amet augue sed, viverra consequat nisi. Duis molestie consequat velit, sit amet rutrum lacus lobortis at. Aenean sodales quis lorem et auctor. Morbi at volutpat leo. Nulla tristique tempus mi, sit amet faucibus nulla ullamcorper ut.\n\nDuis a ante id nisi facilisis vulputate id at erat. Donec nec tortor ut nunc feugiat tempor. Pellentesque sollicitudin tristique eros vel elementum. Vivamus lorem magna, finibus nec eros sed, posuere condimentum ligula. Nullam eget leo quis purus finibus tristique. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Vivamus auctor arcu ut blandit sodales. Aliquam orci nulla, sodales a nisl et, volutpat fringilla ipsum. Nullam rhoncus arcu sem, et pharetra urna egestas ut. Nam elementum arcu et interdum volutpat. Suspendisse potenti. Nunc justo libero, bibendum eget bibendum at, feugiat vel risus. Integer nunc orci, interdum eget consequat vel, pretium sed nibh. Praesent interdum dignissim turpis. Cras et scelerisque mi.\n\nDonec auctor vel est sed lacinia. Fusce non enim enim. Duis at justo purus. Cras tempor at nisi et pretium. Proin bibendum aliquam viverra. Morbi eu ligula at mauris mollis mollis sit amet non elit. Donec in lorem nisl."}
                                     />
                                 </Grid>
                                 <Grid item xs={12} sm={12}>
-                                    <Field name="agree" type='checkbox' component={CheckboxWithLabel} Label={{ label: 'I agree to the Terms & Conditions' }}
-                                    />
+                                    <Field name="agree" type='checkbox' component={CheckboxWithLabel} Label={{ label: 'I agree to the Terms & Conditions' }} />
                                 </Grid>
                             </Grid>
                         </FormikStep>
@@ -186,7 +191,12 @@ export function FormikStepper({ children, ...props }: FormikConfig<FormikValues>
     const [activeStep, setActiveStep] = useState(0);
     const currentChild = arrChildren[activeStep];
     const [completed, setCompleted] = useState(false);
+    const [showDialog, setShowDialog] = useState(false);
     const classes = useStyles();
+
+    const handleDialogClose = () => {
+        setShowDialog(false);
+    };
 
     function isLastStep() {
         return activeStep === arrChildren.length - 1;
@@ -200,6 +210,7 @@ export function FormikStepper({ children, ...props }: FormikConfig<FormikValues>
                 if (isLastStep()) {
                     await props.onSubmit(values, helpers);
                     setCompleted(true);
+                    setShowDialog(true);
                 } else {
                     setActiveStep(s => s + 1);
                 }
@@ -220,16 +231,48 @@ export function FormikStepper({ children, ...props }: FormikConfig<FormikValues>
                     <Grid container spacing={2} style={{ justifyContent: 'flex-end' }}>
                         {activeStep > 0 ? (
                             <Grid item>
-                                <Button disabled={isSubmitting} variant="contained" color="primary" onClick={() => setActiveStep(s => s - 1)}><BackArrow />Back</Button>
+                                <Button
+                                    disabled={isSubmitting || completed}
+                                    variant="contained"
+                                    color="primary"
+                                    onClick={() => setActiveStep(s => s - 1)}
+                                >
+                                    <BackArrow />Back
+                                </Button>
                             </Grid>
                             ) : null
                         }
                         <Grid item>
-                            <Button startIcon={isSubmitting ? <CircularProgress size='1rem' /> : <ForwardArrow />} disabled={isSubmitting || !values.agree} variant="contained" color="primary" type="submit">
+                            <Button
+                                startIcon={isSubmitting ? <CircularProgress size='1rem' /> : <ForwardArrow />}
+                                disabled={isSubmitting || !values.agree || completed}
+                                variant="contained"
+                                color="primary"
+                                type="submit"
+                            >
                                 {isSubmitting ? 'Submitting...' : (isLastStep() ? 'Done' : 'Next')}
                             </Button>
                         </Grid>
                     </Grid>
+                    <Dialog
+                        open={showDialog}
+                        onClose={handleDialogClose}
+                        aria-labelledby="alert-dialog-title"
+                        aria-describedby="alert-dialog-description"
+                    >
+                        <DialogTitle id="alert-dialog-title">{"Loan Request Received"}</DialogTitle>
+                        <DialogContent>
+                            <DialogContentText id="alert-dialog-description">
+                                We have received your loan reqest and once we have completed all the processing on it,
+                                you will be notified on the provided email address as well as mobile number, thank you.
+                </DialogContentText>
+                        </DialogContent>
+                        <DialogActions>
+                            <Button variant="contained" onClick={handleDialogClose} color="primary" autoFocus>
+                                Great!
+                            </Button>
+                        </DialogActions>
+                    </Dialog>
                 </Form>
             )}
         </Formik>

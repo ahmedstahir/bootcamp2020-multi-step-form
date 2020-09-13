@@ -57,7 +57,7 @@ export default function HeaderBar() {
                     <Toolbar variant="regular">
                         <ListAltIcon className={classes.icon} />
                         <Typography variant="h6" color="inherit">
-                            <strong>Multi-Step Form using Formik, Material-UI and TypeScript</strong>
+                            <strong>Request a Loan</strong>
                         </Typography>
                     </Toolbar>
                 </AppBar>
